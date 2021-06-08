@@ -78,6 +78,6 @@ while (numbertocheck %2 ==0  )
 
 }
 return false;
-
+// This is just a test. 
 }
 #pragma endregion CheckPowerofTwo
