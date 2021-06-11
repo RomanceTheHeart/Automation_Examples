@@ -161,27 +161,27 @@ void UActionUtilityFunctions::GiveFeedback(FString string, uint32 counter)
 void UActionUtilityFunctions::CleanUp(FString parentfolder)
 {
 	// check if the parent folder starts with:/Game
-	if(!parentfolder.StartsWith(TEXT("/Game")))
+	if (!parentfolder.StartsWith(TEXT("/Game")))
 	{
-	//if not, put this in front of it. 
-	parentfolder = FPaths::Combine(TEXT("/Game"),parentfolder);
+		//if not, put this in front of it. 
+		parentfolder = FPaths::Combine(TEXT("/Game"), parentfolder);
 
 	}
 	//everything is pretty much the same after//
 	TArray<UObject*> SelectedObjects = UEditorUtilityLibrary::GetSelectedAssets();
-	uint32 Counter{0}; 
+	uint32 Counter{ 0 };
 	for (UObject* selectedobject : SelectedObjects)
 	{
 		if (ensure(selectedobject))
-		{	
+		{
 			// create a new to the parent folder combined with the class and the object selected and the object name.
-			FString NewPath = FPaths::Combine(parentfolder, selectedobject->GetClass()->GetName(),selectedobject->GetName());
-			
+			FString NewPath = FPaths::Combine(parentfolder, selectedobject->GetClass()->GetName(), selectedobject->GetName());
+
 			//in order to execute this next line: #include "EditorAssetLibrary", Plus include: 
 			//"EditorScriptingUtilities" into the build file. 
 			if (UEditorAssetLibrary::RenameLoadedAsset(selectedobject, NewPath))
 			{
-				Counter++; 
+				Counter++;
 			}
 
 			else {
@@ -190,9 +190,46 @@ void UActionUtilityFunctions::CleanUp(FString parentfolder)
 		}
 	}
 
-
-
+	GiveFeedback("Moved: ", Counter);
 
 }
 
 #pragma endregion FileCleanUp
+
+
+#pragma region AssetDuplicator
+void UActionUtilityFunctions::AssetDuplicator(uint32 numberofduplicates, bool bSave)
+{
+	//Note How this is not a pointer.?? 
+	TArray<FAssetData> AssetDataArray = UEditorUtilityLibrary::GetSelectedAssetData();
+
+	uint32 Counter{ 0 };
+	//Gets all the selected assets
+	for (FAssetData currentasset : AssetDataArray)
+	{
+		// for loops iterates from '0' to the number of assets we'd like to create.
+		for (uint32 iter={ 0 }; iter < numberofduplicates; ++iter)
+		{
+			//Assign the old file name and append the number of the current copy.
+			FString NewFileName = currentasset.AssetName.ToString().Append("_").Append(FString::FromInt(iter));
+			
+			// Path is the same as the previous asset has, it differs by the file name. 
+			FString NewPath = FPaths::Combine(currentasset.PackagePath.ToString(), NewFileName);
+
+			if (ensure(UEditorAssetLibrary::DuplicateAsset(currentasset.ObjectPath.ToString(), NewPath)))
+			{
+				++Counter;
+				if (bSave)
+				{
+					UEditorAssetLibrary::SaveAsset( NewPath, false);
+				}
+			}
+
+		}
+
+	}
+
+
+
+}
+#pragma endregion AssetDuplicator

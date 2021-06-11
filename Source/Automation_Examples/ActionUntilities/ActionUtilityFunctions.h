@@ -29,7 +29,9 @@ class AUTOMATION_EXAMPLES_API UActionUtilityFunctions : public UAssetActionUtili
 	GENERATED_BODY()
 	
 	public:
-
+	UFUNCTION(CallInEditor)
+	void AssetDuplicator(uint32 numberofduplicates = 1, bool bSave = true);
+	 
 	UFUNCTION(CallInEditor)
 	void CleanUp(FString parentfolder=FString("/Game"));
 
