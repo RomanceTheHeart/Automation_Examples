@@ -198,6 +198,7 @@ void UActionUtilityFunctions::CleanUp(FString parentfolder)
 
 
 #pragma region AssetDuplicator
+
 void UActionUtilityFunctions::AssetDuplicator(uint32 numberofduplicates, bool bSave)
 {
 	//Note How this is not a pointer.?? 
@@ -208,11 +209,11 @@ void UActionUtilityFunctions::AssetDuplicator(uint32 numberofduplicates, bool bS
 	for (FAssetData currentasset : AssetDataArray)
 	{
 		// for loops iterates from '0' to the number of assets we'd like to create.
-		for (uint32 iter={ 0 }; iter < numberofduplicates; ++iter)
+		for (uint32 iter = { 0 }; iter < numberofduplicates; ++iter)
 		{
 			//Assign the old file name and append the number of the current copy.
-			FString NewFileName = currentasset.AssetName.ToString().Append("_").Append(FString::FromInt(iter));
-			
+			FString NewFileName = currentasset.AssetName.ToString().Append(FString("_")).Append(FString::FromInt(iter));
+
 			// Path is the same as the previous asset has, it differs by the file name. 
 			FString NewPath = FPaths::Combine(currentasset.PackagePath.ToString(), NewFileName);
 
@@ -221,7 +222,7 @@ void UActionUtilityFunctions::AssetDuplicator(uint32 numberofduplicates, bool bS
 				++Counter;
 				if (bSave)
 				{
-					UEditorAssetLibrary::SaveAsset( NewPath, false);
+					UEditorAssetLibrary::SaveAsset(NewPath, false);
 				}
 			}
 
@@ -232,4 +233,60 @@ void UActionUtilityFunctions::AssetDuplicator(uint32 numberofduplicates, bool bS
 
 
 }
+
 #pragma endregion AssetDuplicator
+
+
+#pragma region RemoveUnusedObjects
+void UActionUtilityFunctions::RemoveUnusedObjects(bool Bdeleteimmedietely)
+{
+	//As usual create an array to iterate through our selected objects
+	TArray<UObject*>SelectedObjects = UEditorUtilityLibrary::GetSelectedAssets();
+	//Now create an empty array to store selected objects.
+	TArray<UObject*> UnusedObjects = TArray<UObject*>();
+	//looping thought selected......
+	for (UObject* currentobject : SelectedObjects)
+	{
+		if (ensure(currentobject))
+		{
+			if (UEditorAssetLibrary::FindPackageReferencersForAsset(currentobject->GetPathName(), true).Num() <= 0)
+			{   //Adding the objects selected to the empty array. 
+				UnusedObjects.Add(currentobject);
+			}
+		}
+
+	}
+	uint32 Counter{0}; 
+
+	//Now we can iterate over the unused objects.
+	for (UObject* currentunused : UnusedObjects)
+	{
+		if (Bdeleteimmedietely)
+		{
+			if (UEditorAssetLibrary::DeleteLoadedAsset(currentunused))
+			{
+				++Counter; 
+			}
+			else
+			{
+				Display("Error deleting objects " + currentunused->GetPathName(), FColor::Red);
+			}
+		}
+		else
+		{
+			FString NewPath = FPaths::Combine(TEXT("/Game"), TEXT("Trash"), currentunused->GetName());
+			if (UEditorAssetLibrary::RenameLoadedAsset(currentunused, NewPath))
+			{
+				++Counter;
+			}
+			else
+			{
+				Display("Error Moving these objects:"+currentunused->GetPathName(), FColor::Red);			}
+		}
+	}
+	GiveFeedback(Bdeleteimmedietely ? " %d Deleted" : " %d Moved to trash: ", Counter);
+}
+#pragma endregion RemoveUnusedObjects
+
+
+

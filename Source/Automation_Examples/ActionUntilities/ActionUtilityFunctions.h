@@ -30,6 +30,9 @@ class AUTOMATION_EXAMPLES_API UActionUtilityFunctions : public UAssetActionUtili
 	
 	public:
 	UFUNCTION(CallInEditor)
+	void RemoveUnusedObjects( bool Bdeleteimmedietely);
+
+	UFUNCTION(CallInEditor)
 	void AssetDuplicator(uint32 numberofduplicates = 1, bool bSave = true);
 	 
 	UFUNCTION(CallInEditor)
